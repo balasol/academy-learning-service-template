@@ -29,7 +29,7 @@ extra:
       setup: &id001
         safe_contract_address: ${SAFE_CONTRACT_ADDRESS:str:0xBdf42571531660E0099A376e439AFC1122031A44}
         all_participants: ${ALL_PARTICIPANTS:list:["0x9b552d1ecD8511975F1f139B95F0544FD29eD5e1"]}
-        consensus_threshold: null
+        consensus_threshold: ${CONSENSUS_THRESHOLD:int:2}  # Added consensus threshold environment variable
       genesis_config: &id002
         genesis_time: '2022-09-26T00:00:00.000000000Z'
         chain_id: chain-c4daS1
@@ -52,7 +52,7 @@ extra:
   models:
     benchmark_tool:
       args:
-        log_dir: ${LOG_DIR:str:/logs}
+        log_dir: ${LOG_DIR:str:/logs}  # Using environment variable for log directory
     params:
       args:
         setup: *id001
