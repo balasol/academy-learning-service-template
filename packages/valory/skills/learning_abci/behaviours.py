@@ -19,6 +19,8 @@
 
 """This package contains round behaviours of LearningAbciApp."""
 
+import requests
+import os  # To access the environment variables
 from abc import ABC
 from typing import Generator, Set, Type, cast
 
@@ -42,14 +44,12 @@ from packages.valory.skills.learning_abci.rounds import (
     TxPreparationRound,
 )
 
-
 HTTP_OK = 200
 GNOSIS_CHAIN_ID = "gnosis"
 TX_DATA = b"0x"
 SAFE_GAS = 0
 VALUE_KEY = "value"
 TO_ADDRESS_KEY = "to_address"
-
 
 class LearningBaseBehaviour(BaseBehaviour, ABC):  # pylint: disable=too-many-ancestors
     """Base behaviour for the learning_abci skill."""
@@ -92,17 +92,25 @@ class APICheckBehaviour(LearningBaseBehaviour):  # pylint: disable=too-many-ance
 
     def get_price(self):
         """Get token price from Coingecko"""
-        # Interact with Coingecko's API
-        # result = yield from self.get_http_response("coingecko.com")
-        yield
-        price = 1.0
-        self.context.logger.info(f"Price is {price}")
-        return price
+        api_key = os.getenv("COINGECKO_API_KEY")
+        url = f"https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd&x_cg_pro_api_key={api_key}"
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                price_data = response.json()
+                eth_price = price_data["ethereum"]["usd"]
+                self.context.logger.info(f"Price is {eth_price}")
+                return eth_price
+            else:
+                self.context.logger.error(f"API request failed with status code {response.status_code}")
+                return None
+        except Exception as e:
+            self.context.logger.error(f"Error fetching price: {e}")
+            return None
 
     def get_balance(self):
         """Get balance"""
         # Use the contract api to interact with the ERC20 contract
-        # result = yield from self.get_contract_api_response()
         yield
         balance = 1.0
         self.context.logger.info(f"Balance is {balance}")
@@ -132,10 +140,14 @@ class DecisionMakingBehaviour(
 
     def get_event(self):
         """Get the next event"""
-        # Using the token price from the previous round, decide whether we should make a transfer or not
-        event = Event.DONE.value
-        self.context.logger.info(f"Event is {event}")
-        return event
+        # Dummy decision check
+        decision_criteria = True  # Replace with real logic later
+        if decision_criteria:
+            self.context.logger.info("Decision criteria met. Proceeding with the event.")
+            return "EVENT_TRIGGERED"
+        else:
+            self.context.logger.info("Decision criteria not met. No event.")
+            return "NO_EVENT"
 
 
 class TxPreparationBehaviour(
